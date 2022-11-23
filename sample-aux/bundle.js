@@ -191,7 +191,9 @@ var MetaRouter = (function () {
     function MetaRouter() {
         this.additionalConfig = {
             hashPrefix: '/',
-            additionalHeight: 5
+            additionalHeight: 5,
+            handleNotification: function () { },
+            allowedOrigins: '*'
         };
         this.routes = new Array();
         this.urlParser = new UrlParser();
@@ -214,6 +216,9 @@ var MetaRouter = (function () {
         }
         else {
             this.routeByUrl();
+        }
+        if (this.additionalConfig.allowedOrigins === 'same-origin') {
+            this.additionalConfig.allowedOrigins = location.origin;
         }
     };
     /**
@@ -250,12 +255,35 @@ var MetaRouter = (function () {
     MetaRouter.prototype.handleMessage = function (event) {
         if (!event.data)
             return;
+        if (this.additionalConfig.allowedOrigins === 'same-origin'
+            && event.origin !== location.origin) {
+            throw new Error('Received message from not allowed origin');
+        }
+        else if (this.additionalConfig.allowedOrigins !== '*') {
+            var /** @type {?} */ whiteList = this.additionalConfig.allowedOrigins.split(';');
+            if (whiteList.indexOf(event.origin) === -1) {
+                throw new Error('Received message from not allowed origin');
+            }
+        }
         if (event.data.message === 'routed') {
             var /** @type {?} */ route = this.routes.find(function (r) { return r.path === event.data.appPath; });
             this.setRouteInHash(route, event.data.route);
         }
         else if (event.data.message === 'set-height') {
             this.resizeIframe(event.data.appPath, event.data.height);
+        }
+        else if (event.data.message === 'notification' && this.additionalConfig.handleNotification) {
+            this.additionalConfig.handleNotification(event.data.tag, event.data.data);
+        }
+        else if (event.data.message === 'broadcast') {
+            for (var _i = 0, _a = this.routes; _i < _a.length; _i++) {
+                var route = _a[_i];
+                var /** @type {?} */ iframe = this.getIframe(route);
+                if (iframe) {
+                    iframe.contentWindow.postMessage({ message: 'notification', tag: event.data.tag, data: event.data.data }, this.additionalConfig.allowedOrigins);
+                }
+            }
+            this.additionalConfig.handleNotification(event.data.tag, event.data.data);
         }
     };
     /**
@@ -310,7 +338,7 @@ var MetaRouter = (function () {
         });
         if (subRoute) {
             var /** @type {?} */ activatedIframe = (this.getIframe(routeToActivate));
-            activatedIframe.contentWindow.postMessage({ message: 'sub-route', route: subRoute }, '*');
+            activatedIframe.contentWindow.postMessage({ message: 'sub-route', route: subRoute }, this.additionalConfig.allowedOrigins);
         }
         this.setRouteInHash(routeToActivate, subRoute);
         this.activatedRoute = routeToActivate;
@@ -411,6 +439,15 @@ var RoutedApp = (function () {
      */
     RoutedApp.prototype.config = function (config) {
         this.childConfig = config;
+        if (!config.handleNotification) {
+            config.handleNotification = function () { };
+        }
+        if (!config.allowedOrigins) {
+            config.allowedOrigins = '*';
+        }
+        else if (config.allowedOrigins === 'same-origin') {
+            config.allowedOrigins = location.origin;
+        }
     };
     /**
      * @return {?}
@@ -427,7 +464,25 @@ var RoutedApp = (function () {
      * @return {?}
      */
     RoutedApp.prototype.sendRoute = function (url) {
-        parent.postMessage({ message: 'routed', appPath: this.childConfig.appId, route: url }, '*');
+        parent.postMessage({ message: 'routed', appPath: this.childConfig.appId, route: url }, this.childConfig.allowedOrigins);
+    };
+    /**
+     * Sends a message to the shell
+     * @param {?} tag
+     * @param {?} data
+     * @return {?}
+     */
+    RoutedApp.prototype.notifyShell = function (tag, data) {
+        parent.postMessage({ message: 'notification', tag: tag, data: data }, this.childConfig.allowedOrigins);
+    };
+    /**
+     * Sends a message to all routed apps
+     * @param {?} tag
+     * @param {?} data
+     * @return {?}
+     */
+    RoutedApp.prototype.broadcast = function (tag, data) {
+        parent.postMessage({ message: 'broadcast', tag: tag, data: data }, this.childConfig.allowedOrigins);
     };
     /**
      * Registers a callback that allows the meta router to request
@@ -436,9 +491,13 @@ var RoutedApp = (function () {
      * @return {?}
      */
     RoutedApp.prototype.registerForRouteChange = function (callback) {
+        var _this = this;
         window.addEventListener('message', function (e) {
             if (e.data && e.data.message === 'sub-route') {
                 callback(e.data.route);
+            }
+            else if (e.data.message === 'notification' && _this.childConfig.handleNotification) {
+                _this.childConfig.handleNotification(e.data.tag, e.data.data);
             }
         }, true);
     };
@@ -448,7 +507,7 @@ var RoutedApp = (function () {
     RoutedApp.prototype.sendHeight = function () {
         var /** @type {?} */ html = document.documentElement;
         var /** @type {?} */ height = html.offsetHeight;
-        parent.postMessage({ message: 'set-height', appPath: this.childConfig.appId, height: height }, '*');
+        parent.postMessage({ message: 'set-height', appPath: this.childConfig.appId, height: height }, this.childConfig.allowedOrigins);
     };
     return RoutedApp;
 }());
