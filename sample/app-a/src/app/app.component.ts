@@ -13,26 +13,27 @@ export class AppComponent {
   title = 'app';
 
   constructor(
-    @Inject(ROUTED_APP) private routedApp: RoutedApp, 
-    private router: Router) {
-    this.initRoutedApp();
+    // @Inject(ROUTED_APP) private routedApp: RoutedApp,
+    // private router: Router
+    ) {
+    // this.initRoutedApp();
   }
-  
-  initRoutedApp() {
-    
-    this.routedApp.config({ 
-      appId: 'a', 
-      handleNotification: (tag, data) => console.debug('received broadcast', {tag, data}),
-      allowedOrigins: 'same-origin'
-    });
 
-    this.routedApp.init();
+  // initRoutedApp() {
 
-    this.router.events.pipe(filter(e => e instanceof NavigationEnd)).subscribe((e: NavigationEnd) => {
-      this.routedApp.sendRoute(e.url);
-    });
+  //   this.routedApp.config({
+  //     appId: 'a',
+  //     handleNotification: (tag, data) => console.debug('received broadcast', {tag, data}),
+  //     allowedOrigins: 'same-origin'
+  //   });
 
-    this.routedApp.registerForRouteChange(url => this.router.navigateByUrl(url));
-  }
+  //   this.routedApp.init();
+
+  //   this.router.events.pipe(filter(e => e instanceof NavigationEnd)).subscribe((e: NavigationEnd) => {
+  //     this.routedApp.sendRoute(e.url);
+  //   });
+
+  //   this.routedApp.registerForRouteChange(url => this.router.navigateByUrl(url));
+  // }
 
 }

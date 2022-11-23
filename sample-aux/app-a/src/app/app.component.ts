@@ -13,13 +13,13 @@ export class AppComponent {
   title = 'app';
 
   constructor(
-    @Inject(ROUTED_APP) private routedApp: RoutedApp, 
+    @Inject(ROUTED_APP) private routedApp: RoutedApp,
     private router: Router) {
     this.initRoutedApp();
   }
-  
+
   initRoutedApp() {
-    
+
     this.routedApp.config({ appId: 'a' });
     this.routedApp.init();
 

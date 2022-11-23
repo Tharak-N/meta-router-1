@@ -3,11 +3,11 @@ var MetaRouter = require('meta-spa-router').MetaRouter;
 var config = [
     {
         path: 'a',
-        app: '/app-a/dist'
+        app: '/app-a/src'
     },
     {
         path: 'b',
-        app: '/app-b/dist',
+        app: '/app-b/src/app',
         outlet: 'outlet2'
     }
 ];

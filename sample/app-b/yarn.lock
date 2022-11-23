@@ -4708,6 +4708,11 @@ merge-descriptors@1.0.1:
   resolved "https://registry.yarnpkg.com/merge-descriptors/-/merge-descriptors-1.0.1.tgz#b00aaa556dd8b44568150ec9d1b953f3f90cbb61"
   integrity sha512-cCi6g3/Zr1iqQi6ySbseM1Xvooa98N0w31jzUYrXPX2xqObmFGHJ0tQ5u74H3mVh7wLouTseZyYIq39g8cNp1w==
 
+meta-spa-router@^1.2.0:
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/meta-spa-router/-/meta-spa-router-1.2.0.tgz#f811d536cee1d62a765f57a1208afe9c8aae98a5"
+  integrity sha512-TWpCDrwYS8mVi2hWWJpqbWq3x10kJ772CLxJS26hByBVpFdDCl9sghE6x6Ufq5IEVowb3QtIYyS1sK/m0LNn5w==
+
 methods@~1.1.2:
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/methods/-/methods-1.1.2.tgz#5529a4d67654134edcc5266656835b0f851afcee"
